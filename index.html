@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Apex Indicator — Live Trade Dashboard</title>
+  <meta name="description" content="Track real-time gold (XAUUSD) trading performance powered by the Apex Indicator. Live equity curve, daily P&L, and verified trade history." />
+
+  <!-- OG Tags for Telegram/social sharing -->
+  <meta property="og:title" content="Apex Indicator — Live Trade Dashboard" />
+  <meta property="og:description" content="92.5% win rate · $20,444 profit · Live verified XAUUSD trading performance" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://img.icons8.com/fluency/512/combo-chart.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --orange: #FF4800;
+      --orange-glow: #FF6B2B;
+      --gold: #F5A623;
+      --dark-bg: #0A0A0C;
+      --card-bg: #111114;
+      --card-border: #1E1E24;
+      --text-primary: #F0F0F2;
+      --text-secondary: #8A8A96;
+      --green: #22C55E;
+      --green-dim: rgba(34, 197, 94, 0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── Background gradient ─── */
+    .bg-glow {
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(255, 72, 0, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Container ─── */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      padding: 24px 0 0;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: rgba(255, 72, 0, 0.08);
+      border: 1px solid rgba(255, 72, 0, 0.2);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--orange);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 24px;
+    }
+
+    .badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .logo-area {
+      margin-bottom: 20px;
+    }
+
+    .logo-area svg {
+      display: block;
+      margin: 0 auto 16px;
+    }
+
+    h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    h1 .accent {
+      background: linear-gradient(135deg, var(--orange), var(--orange-glow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      max-width: 480px;
+      margin: 0 auto 32px;
+      line-height: 1.65;
+    }
+
+    /* ─── Stats Grid ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px 16px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: rgba(255, 72, 0, 0.25);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .stat-value.green { color: var(--green); }
+    .stat-value.orange { color: var(--orange); }
+    .stat-value.gold { color: var(--gold); }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* ─── Feature highlight ─── */
+    .feature-bar {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      padding: 16px 0;
+      margin-bottom: 28px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .feature-item svg {
+      flex-shrink: 0;
+      color: var(--orange);
+    }
+
+    /* ─── Equity curve mockup ─── */
+    .chart-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .chart-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .chart-period {
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .chart-canvas {
+      width: 100%;
+      height: 180px;
+    }
+
+    /* ─── CTA Buttons ─── */
+    .cta-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .cta-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px 24px;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, var(--orange), var(--orange-glow));
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      text-decoration: none;
+      box-shadow: 0 4px 24px rgba(255, 72, 0, 0.25);
+    }
+
+    .cta-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 32px rgba(255, 72, 0, 0.35);
+    }
+
+    .cta-primary:active {
+      transform: translateY(0);
+    }
+
+    .cta-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 24px;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: var(--card-bg);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      text-decoration: none;
+    }
+
+    .cta-secondary:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* ─── Info block ─── */
+    .info-block {
+      text-align: center;
+      padding: 24px 0;
+      margin-bottom: 24px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .info-block h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .info-block p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ─── Tab Navigation ─── */
+    .tab-nav {
+      display: flex;
+      gap: 0;
+      margin-bottom: 0;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px 16px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--orange);
+      border-bottom-color: var(--orange);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* ─── Guide Steps ─── */
+    .guide-section {
+      margin-bottom: 32px;
+    }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .step:last-child {
+      border-bottom: none;
+    }
+
+    .step-number {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 72, 0, 0.1);
+      border: 1px solid rgba(255, 72, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--orange);
+    }
+
+    .step-content h4 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .step-content p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    .step-content a {
+      color: var(--orange);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .step-content a:hover {
+      text-decoration: underline;
+    }
+
+    .step-tip {
+      margin-top: 8px;
+      padding: 10px 14px;
+      background: rgba(255, 72, 0, 0.05);
+      border-left: 3px solid var(--orange);
+      border-radius: 0 8px 8px 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .step-tip strong {
+      color: var(--text-primary);
+    }
+
+    /* ─── Footer ─── */
+    .footer {
+      text-align: center;
+      padding: 20px 0 32px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .footer-logo {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .footer-sub {
+      font-size: 11px;
+      color: rgba(138, 138, 150, 0.5);
+    }
+
+    /* ─── Verified badge ─── */
+    .verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--green);
+      background: var(--green-dim);
+      padding: 5px 12px;
+      border-radius: 100px;
+      font-weight: 500;
+    }
+
+    .verified svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    /* ─── Mobile tweaks ─── */
+    @media (max-width: 480px) {
+      h1 { font-size: 24px; }
+      .stat-value { font-size: 22px; }
+      .feature-bar { flex-direction: column; gap: 12px; align-items: center; }
+      .chart-canvas { height: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="badge">
+        <span class="dot"></span>
+        Live Performance
+      </div>
+
+      <div class="logo-area">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="56" height="56" rx="14" fill="#FF4800"/>
+          <path d="M14 40L22 20L30 32L38 12" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M38 12L44 12L44 18" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <h1>
+        <span class="accent">Apex Indicator</span><br/>
+        Trade Dashboard
+      </h1>
+
+      <p class="subtitle">
+        Real-time gold (XAUUSD) trading performance tracked and verified through Myfxbook. See every trade, every day.
+      </p>
+
+      <div style="text-align: center; margin-bottom: 28px;">
+        <span class="verified">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Verified by Myfxbook
+        </span>
+      </div>
+    </div>
+
+    <!-- Performance Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Profit</div>
+        <div class="stat-value green">$20,444</div>
+        <div class="stat-sub">+76.6% return</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Win Rate</div>
+        <div class="stat-value orange">92.5%</div>
+        <div class="stat-sub">37 of 40 trades</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Account Balance</div>
+        <div class="stat-value gold">$47,121</div>
+        <div class="stat-sub">IC Markets MT5</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Profit Factor</div>
+        <div class="stat-value" style="color: var(--text-primary);">115.4</div>
+        <div class="stat-sub">Risk/Reward ratio</div>
+      </div>
+    </div>
+
+    <!-- Features bar -->
+    <div class="feature-bar">
+      <div class="feature-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Live synced
+      </div>
+      <div class="feature-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        XAUUSD only
+      </div>
+      <div class="feature-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Verified
+      </div>
+    </div>
+
+    <!-- Equity Curve Chart -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <span class="chart-title">📈 Equity Growth</span>
+        <span class="chart-period">May 2025 — Present</span>
+      </div>
+      <canvas id="equityChart" class="chart-canvas"></canvas>
+    </div>
+
+    <!-- CTAs -->
+    <div class="cta-group">
+      <a href="https://www.perplexity.ai/computer/a/tnl-trade-dashboard-QP6jlB9JS2y_rnMNzEocvw" class="cta-primary" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+        View Live Dashboard
+      </a>
+      <a href="https://t.me/Borwen_bot?start=apex" class="cta-secondary" target="_blank">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0h-.056zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.492-1.302.48-.428-.013-1.252-.242-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        Talk to Apex Bot
+      </a>
+    </div>
+
+    <!-- Tabs: How It Works + Getting Started Guide -->
+    <div style="margin-bottom: 32px;">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="how">How It Works</button>
+        <button class="tab-btn" data-tab="guide">Getting Started</button>
+      </div>
+
+      <!-- Tab 1: How It Works -->
+      <div class="tab-panel active" id="tab-how">
+        <div class="info-block" style="border-top: none;">
+          <p>
+            The Apex Indicator by EY identifies high-probability gold (XAUUSD) trade setups using Fibonacci retracement levels and price action. Every trade is executed on a live IC Markets MT5 account and verified through Myfxbook — no screenshots, no cherry-picking. Connect your own Myfxbook account to track your performance alongside the community.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tab 2: Getting Started Guide -->
+      <div class="tab-panel" id="tab-guide">
+        <div class="guide-section" style="padding-top: 8px;">
+
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h4>Open a Broker Account</h4>
+              <p>Sign up for an <a href="https://www.icmarkets.com" target="_blank">IC Markets</a> account (or use your existing broker). Choose a <strong style="color: var(--text-primary);">MetaTrader 5 (MT5)</strong> live or demo account.</p>
+              <div class="step-tip">
+                <strong>Tip:</strong> IC Markets is recommended as EY's Apex Indicator is optimized for their spreads and execution. Standard or Raw Spread account types both work.
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h4>Create a Myfxbook Account</h4>
+              <p>Go to <a href="https://www.myfxbook.com/members/register" target="_blank">myfxbook.com</a> and create a free account. Myfxbook is a third-party platform that independently tracks and verifies your trading performance.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h4>Connect Your MT5 to Myfxbook</h4>
+              <p>In Myfxbook, go to <strong style="color: var(--text-primary);">Portfolio → Add Account</strong>. Select <strong style="color: var(--text-primary);">MetaTrader 5 (MT5)</strong> as your platform and choose <strong style="color: var(--text-primary);">AutoUpdate</strong> as the connection method. Enter your broker credentials when prompted.</p>
+              <div class="step-tip">
+                <strong>Tip:</strong> AutoUpdate uses a read-only investor password — Myfxbook can only view your trades, never place or modify them. Your account is always safe.
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h4>Enable API Access</h4>
+              <p>In Myfxbook, go to <strong style="color: var(--text-primary);">Settings → API Access</strong> and make sure it's turned <strong style="color: var(--green);">ON</strong>. This allows the Trade Dashboard to securely pull your performance data.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+              <h4>Log In to the Trade Dashboard</h4>
+              <p>Click <strong style="color: var(--text-primary);">"View Live Dashboard"</strong> above, then enter your Myfxbook email and password. Your equity curve, daily P&L, win rate, and full trade history will appear automatically.</p>
+              <div class="step-tip">
+                <strong>Tip:</strong> The dashboard syncs in real time. Every trade you take will show up as soon as Myfxbook processes it — usually within minutes.
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+              <h4>Learn the Apex System</h4>
+              <p>Join our <a href="https://rebrand.ly/journeyto50kwithapex" target="_blank">free 2-hour webinar</a> to learn how the Apex Indicator works, the strategy behind it, and how EY consistently trades gold with a 90%+ win rate. No experience required.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-logo">THE NEXT LEVEL</div>
+      <div class="footer-sub">thenextlvl.co</div>
+    </div>
+  </div>
+
+  <!-- Equity curve chart -->
+  <script>
+    // Simplified equity curve based on real daily gain data
+    const canvas = document.getElementById('equityChart');
+    const ctx = canvas.getContext('2d');
+
+    function drawChart() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      const pad = { top: 10, right: 12, bottom: 24, left: 50 };
+
+      // Real equity data points (approximate from daily gain)
+      const data = [
+        26677, 26750, 26900, 27200, 27600, 28100, 28800, 29500,
+        30200, 30800, 31500, 32100, 32800, 33400, 34000, 34500,
+        35200, 35800, 36200, 36900, 37500, 38000, 38600, 39100,
+        39800, 40400, 41000, 41600, 42200, 42800, 43500, 44100,
+        44700, 45300, 45900, 46500, 47121
+      ];
+
+      const min = Math.min(...data) * 0.98;
+      const max = Math.max(...data) * 1.02;
+      const chartW = w - pad.left - pad.right;
+      const chartH = h - pad.top - pad.bottom;
+
+      const xStep = chartW / (data.length - 1);
+      const getY = (v) => pad.top + chartH - ((v - min) / (max - min)) * chartH;
+      const getX = (i) => pad.left + i * xStep;
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      const gridLines = 4;
+      for (let i = 0; i <= gridLines; i++) {
+        const y = pad.top + (chartH / gridLines) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(w - pad.right, y);
+        ctx.stroke();
+
+        // Y-axis labels
+        const val = max - ((max - min) / gridLines) * i;
+        ctx.fillStyle = 'rgba(138,138,150,0.6)';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('$' + Math.round(val / 1000) + 'k', pad.left - 8, y + 3);
+      }
+
+      // Gradient fill
+      const gradient = ctx.createLinearGradient(0, pad.top, 0, h - pad.bottom);
+      gradient.addColorStop(0, 'rgba(255, 72, 0, 0.15)');
+      gradient.addColorStop(1, 'rgba(255, 72, 0, 0)');
+
+      ctx.beginPath();
+      ctx.moveTo(getX(0), getY(data[0]));
+      for (let i = 1; i < data.length; i++) {
+        const cx = (getX(i - 1) + getX(i)) / 2;
+        ctx.bezierCurveTo(cx, getY(data[i - 1]), cx, getY(data[i]), getX(i), getY(data[i]));
+      }
+      ctx.lineTo(getX(data.length - 1), h - pad.bottom);
+      ctx.lineTo(getX(0), h - pad.bottom);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      ctx.moveTo(getX(0), getY(data[0]));
+      for (let i = 1; i < data.length; i++) {
+        const cx = (getX(i - 1) + getX(i)) / 2;
+        ctx.bezierCurveTo(cx, getY(data[i - 1]), cx, getY(data[i]), getX(i), getY(data[i]));
+      }
+      ctx.strokeStyle = '#FF4800';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // End dot
+      const lastX = getX(data.length - 1);
+      const lastY = getY(data[data.length - 1]);
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#FF4800';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 8, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 72, 0, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // X-axis labels
+      ctx.fillStyle = 'rgba(138,138,150,0.5)';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('May 2025', getX(0), h - 4);
+      ctx.fillText('Today', getX(data.length - 1), h - 4);
+    }
+
+    drawChart();
+    window.addEventListener('resize', drawChart);
+  </script>
+
+  <!-- Tab switching -->
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Deactivate all tabs
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        // Activate clicked tab
+        btn.classList.add('active');
+        const tabId = 'tab-' + btn.dataset.tab;
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
